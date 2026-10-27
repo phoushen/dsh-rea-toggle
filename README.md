@@ -1,102 +1,101 @@
 # dsh-rea-toggle
 
-**A GUI switch for the REA MCP server in DeepSeek Harness.** Turn its ~229 `mcp__rea__*` tools on when you are reverse-engineering, and off when you are not — without editing YAML, and without paying their context cost in every unrelated conversation.
+[English](README.en.md) · **简体中文**
+
+**给 DeepSeek Harness 里的 REA MCP 服务器一个图形开关。** 做逆向时打开它的 ~229 个 `mcp__rea__*` 工具，不做的时候关掉 —— 不用改 YAML，也不用让无关对话替这些工具付上下文开销。
 
 <p align="center">
   <img src="icon.svg" width="72" alt="">
 </p>
 
 ```
-● REA ON     ← 229 tools registered, schemas ride along on every request
-● REA OFF    ← nothing registered, unrelated chats pay nothing
+● REA 已开     ← 注册 229 个工具，每个请求都带 schema
+● REA 已关     ← 一个都不注册，无关对话零负担
 ```
 
 ---
 
-## The problem
+## 问题
 
-[REA](https://github.com/morluto/rea) registers **229 tools** on the host (`mcp__rea__*`). Tool definitions are part of every request's system prompt, whether or not you call one.
+[REA](https://github.com/morluto/rea) 会在宿主上注册 **229 个工具**（`mcp__rea__*`）。工具定义属于每次请求的系统提示，不管你调不调它。
 
-Measured on `rea-agents@6.8.0`, using the server's own `tools/list` response:
+实测数据（`rea-agents@6.8.0`，取服务器自己 `tools/list` 的返回）：
 
-| Measurement | Value |
+| 测量项 | 数值 |
 |---|---|
-| tools returned by `tools/list` | 229 |
-| total characters of tool `name` + `description` | 139,502 |
-| rough token estimate (`chars ÷ 3.5`) | **≈ 40,000 tokens** |
+| `tools/list` 返回的工具数 | 229 |
+| 工具 `name` + `description` 总字符 | 139,502 |
+| 粗略 token 估算（`字符 ÷ 3.5`） | **≈ 40,000 token** |
 
-That is the *descriptions alone* — the full JSON Schemas add more, partly reduced by REA's own `REA_MCP_INPUT_SCHEMA_PROFILE=compact`. Your tokenizer, host version and schema profile will change the number; the order of magnitude will not.
+这只是**描述文本**，完整 JSON Schema 还要更多 —— 其中一部分已经被 REA 自己的 `REA_MCP_INPUT_SCHEMA_PROFILE=compact` 压过了。不同 tokenizer、宿主版本、schema profile 会让数字浮动，量级不会变。
 
-For a reverse-engineering session, 40k tokens of tool surface is a bargain. For "help me write a video script", it is dead weight you cannot switch off.
+做逆向时，4 万 token 的工具面很划算。写个视频脚本时，这就是关不掉的死重。
 
-## Why REA does not ship this switch itself
+## 为什么 REA 自己不提供这个开关
 
-Verified against `rea-agents@6.8.0`:
+对着 `rea-agents@6.8.0` 实测：
 
 ```console
 $ rea mcp --help
 rea mcp — Register as MCP server
-
-Usage: rea mcp <command>
 
 Commands:
   add     Register as MCP server
   doctor  Validate MCP server startup and tool listing
 ```
 
-`add` and `doctor`. **No `remove`, no `disable`, no enable, no tool filter.** `rea mcp add --agent <claude-code|cursor|…>` only *writes* a config line into a client; nothing in REA can unregister its tools at runtime.
+只有 `add` 和 `doctor`。**没有 `remove`、没有 `disable`、没有 enable、没有工具过滤。** `rea mcp add --agent <claude-code|cursor|…>` 干的事只是往某个客户端配置里**写一行**；REA 内部任何东西都无法在运行时注销自己的工具。
 
-That is structural, not an oversight: **an MCP server cannot unregister itself.** The tools exist because the host launched the server and asked for `tools/list`. Only the host can decide not to.
+这是结构性的，不是疏漏：**MCP 服务器无法注销自己。** 工具之所以存在，是宿主启动了它并要了 `tools/list`。只有宿主能决定不要。
 
-And on the host side, `@deepseek-ai/dsh-mcp-client`'s config surface has no inclusion filter either:
+而宿主侧的 `@deepseek-ai/dsh-mcp-client` 也没有包含性过滤字段：
 
 ```
 transport · serverName · command · args · env · cwd
 toolCallTimeoutMs · failOnStartupError · maxInstructionBytes · reconnect
 ```
 
-So the switch has to live in the loader patch — the one place that can say "do not start this row". That is exactly the one flag this plugin owns.
+所以开关只能放在 loader patch 里 —— 那是唯一能说"这一行别启动"的地方。本插件就只拥有那一个标志位。
 
-## What it does
+## 它做什么
 
-It flips **one key** — `disabled` — on **one row** of your profile patch:
+它翻的是**一个键** —— `disabled`，作用在 profile patch 的**一行**上：
 
 ```yaml
 # <DSH_HOME>/profiles/<profile>/cordis.patch.yml
 - insert:
     - id: rea-mcp
-      disabled: true          # ← this, and nothing else
+      disabled: true          # ← 只动这个
       name: "@deepseek-ai/dsh-mcp-client"
       config: { … }
 ```
 
-- Reads nothing for writing except that file.
-- Writes nothing except that flag.
-- Never touches `~/.dsh/plugins/rea-agents`, never uninstalls REA, never patches a binary.
-- Reversible by clicking again.
+- 除该文件外不读别的，写也只在那个标志位。
+- 不碰 `~/.dsh/plugins/rea-agents`，不卸载 REA，不改任何二进制。
+- 再点一下即还原。
 
-## Install
+## 安装
 
-### Requirements
+### 环境要求
 
-| Component | Version used for testing |
+| 组件 | 实测版本 |
 |---|---|
-| DeepSeek Harness | 0.2.1-rc.3 (desktop) |
-| REA (`rea-agents`) | 6.8.0 |
+| DeepSeek Harness | 0.2.1-rc.3（桌面版） |
+| REA（`rea-agents`） | 6.8.0 |
 | Node.js | ≥ 20 |
-| An `mcp-client` row that launches REA | e.g. `id: rea-mcp` |
+| 一行能拉起 REA 的 `mcp-client` 行 | 例如 `id: rea-mcp` |
 
-You need REA already working in DSH. This plugin does not install REA.
+**前提是 REA 已在 DSH 里跑通。** 本插件不负责装 REA。
 
-### Option A — from GitHub
+### 方式 A —— 从 GitHub 装
 
 ```powershell
-dsh plugin --profile "$env:DSH_PROFILE" add github:YOUR-GITHUB/dsh-rea-toggle
+dsh plugin --profile "$env:DSH_PROFILE" add github:你的GitHub用户名/dsh-rea-toggle
 ```
 
-If your build has no `dsh` on PATH, use Option B.
+命令行里没有 `dsh` 就走方式 B。
 
-### Option B — manual
+### 方式 B —— 手动
 
 ```powershell
 $home_ = "$env:USERPROFILE\.dsh"
@@ -104,7 +103,7 @@ Copy-Item .\dsh-rea-toggle "$home_\plugins\dsh-rea-toggle" -Recurse
 Copy-Item .\dsh-rea-toggle "$home_\profiles\desktop\node_modules\dsh-rea-toggle" -Recurse
 ```
 
-Then add it to the profile manifest — both places:
+然后改 profile 清单，**两处都要**：
 
 ```jsonc
 // <DSH_HOME>/profiles/desktop/package.json
@@ -114,82 +113,80 @@ Then add it to the profile manifest — both places:
 }
 ```
 
-Restart DeepSeek Harness **completely** (tray included).
+**完全退出** DeepSeek Harness（含托盘）再启动。
 
-### Verify
+### 验证
 
-The chip appears to the left of the message composer. Click it. Or hit the endpoints directly:
+输入框左边会出现小开关。点它，或者直接打端点：
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:<WEB_PORT>/rea-toggle/status
 # {"ok":true,"path":"…\\cordis.patch.yml","rowLine":75,"disabled":false,"enabled":true}
 ```
 
-## Usage
+## 使用
 
-| Action | How |
+| 动作 | 做法 |
 |---|---|
-| Turn off | click the chip, or `POST /rea-toggle/set {"enabled":false}` |
-| Turn on | click the chip, or `POST /rea-toggle/set {"enabled":true}` |
-| Read state | hover the chip, or `GET /rea-toggle/status` |
+| 关闭 | 点开关，或 `POST /rea-toggle/set {"enabled":false}` |
+| 开启 | 点开关，或 `POST /rea-toggle/set {"enabled":true}` |
+| 看状态 | 鼠标悬停，或 `GET /rea-toggle/status` |
 
-**The flag is written immediately; the tool set changes on the next harness start.** Restarting is what makes the ~40k tokens actually go away.
+**标志位是立刻写盘的；工具集合在下次启动时才变。** 重启才是那 4 万 token 真正消失的时刻。
 
-### Without the GUI
-
-Any of these work too:
+### 不走 GUI 也行
 
 ```powershell
-# 1. endpoint
+# 1. 端点
 Invoke-RestMethod http://127.0.0.1:<PORT>/rea-toggle/set -Method POST `
   -ContentType 'application/json' -Body '{"enabled":false}'
 
-# 2. edit the patch yourself — same one key
+# 2. 自己改那一行，效果一样
 #    - id: rea-mcp
 #      disabled: true
 ```
 
-## Configuration
+## 配置
 
-Optional, on this plugin's own row:
+可选，加在本插件自己那行上：
 
 ```yaml
 - insert:
     - id: dsh-rea-toggle
       name: dsh-rea-toggle
       config:
-        targetId: rea-mcp        # row id whose `disabled` flag is flipped
-        routePrefix: /rea-toggle # endpoint prefix
+        targetId: rea-mcp        # 要翻 disabled 的那一行的 id
+        routePrefix: /rea-toggle # 端点前缀
 ```
 
-Set `targetId` if your REA row is not called `rea-mcp`. Multi-server setups: one plugin row per target, each with a distinct `routePrefix`.
+REA 那行不叫 `rea-mcp` 就设 `targetId`。多服务器：一个目标一行插件，`routePrefix` 各自不同。
 
-## What this plugin is not
+## 这个插件不是什么
 
-- Not a REA wrapper, fork, or patch. It never reads REA's code or version.
-- Not a tool filter. `dsh-mcp-client` has no inclusion field, so "keep only these 20 tools" is not possible here — it is all 229 or none.
-- Not an installer. It will not fetch REA, Ghidra, JDK, adb or JADX.
-- Not a security bypass. It toggles a YAML key you already own.
-- Not a token counter. The ≈40k figure is an estimate from REA's own `tools/list`; measure your own if it matters.
+- 不是 REA 的包装、分支或补丁。它从不读 REA 的代码或版本。
+- 不是工具过滤器。`dsh-mcp-client` 没有包含性字段，所以"只留 20 个常用工具"在这里做不到 —— 要么 229 个，要么 0 个。
+- 不是安装器。它不会去下 REA、Ghidra、JDK、adb 或 JADX。
+- 不是安全绕过。它翻的是你自己本来就拥有的一个 YAML 键。
+- 不是 token 计数器。≈4 万这个数字是从 REA 自己的 `tools/list` 估的，你在意就自己量。
 
-## Security
+## 安全
 
-The two endpoints accept `GET /status` and `POST /set` only, on the harness's own loopback web port, and reject a `POST` whose `Origin` host does not match the request `Host`. Body is capped at 64 KiB. Nothing is exposed to the network.
+两个端点只接受 `GET /status` 和 `POST /set`，只监听宿主自己的回环 Web 端口，`POST` 的 `Origin` 主机与请求 `Host` 不一致直接 403，body 上限 64 KiB。不向网络暴露任何东西。
 
-The plugin writes to exactly one path — `<DSH_HOME>/profiles/<profile>/cordis.patch.yml` — and only to the `disabled` line inside the target row.
+插件只写一个路径 —— `<DSH_HOME>/profiles/<profile>/cordis.patch.yml` —— 且只写目标行里的 `disabled` 那一行。
 
-## Troubleshooting
+## 排错
 
-| Symptom | Cause | Fix |
+| 现象 | 原因 | 处理 |
 |---|---|---|
-| No chip in the composer | client half not scanned at boot | fully quit the harness (tray too), start again |
-| Chip shows `REA ?` | endpoint unreachable or row missing | hover for the message; check `/rea-toggle/status` |
-| `row "rea-mcp" not found` | your REA row has another id | set `config.targetId` |
-| Toggled OFF, tools still there | tool registration happens at boot | restart the harness |
-| Changing `disabled` does nothing | no `mcp-client` row launches REA on this profile | this switch is not the problem; check your REA install |
+| 输入框旁没有开关 | client 半在启动时没被扫描到 | 完全退出宿主（含托盘）再开 |
+| 显示 `REA ?` | 端点不通或找不到目标行 | 悬停看提示；查 `/rea-toggle/status` |
+| `row "rea-mcp" not found` | 你的 REA 行 id 不同 | 设 `config.targetId` |
+| 关了之后工具还在 | 工具注册发生在启动时 | 重启宿主 |
+| 改 `disabled` 没反应 | 这个 profile 里没有拉起 REA 的 `mcp-client` 行 | 那不是开关的问题，先查 REA 安装 |
 
-## License
+## 许可
 
-MIT — see [LICENSE](LICENSE).
+MIT，见 [LICENSE](LICENSE)。
 
-REA itself is MIT and lives at <https://github.com/morluto/rea>. DeepSeek Harness is a separate product; this plugin is unofficial and not affiliated with either project.
+REA 本身是 MIT，仓库在 <https://github.com/morluto/rea>。DeepSeek Harness 是独立产品；本插件非官方，与上述两个项目均无隶属关系。

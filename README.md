@@ -90,7 +90,7 @@ toolCallTimeoutMs · failOnStartupError · maxInstructionBytes · reconnect
 ### 方式 A —— 从 GitHub 装
 
 ```powershell
-dsh plugin --profile "$env:DSH_PROFILE" add github:你的GitHub用户名/dsh-rea-toggle
+dsh plugin --profile "$env:DSH_PROFILE" add github:phoushen/dsh-rea-toggle
 ```
 
 命令行里没有 `dsh` 就走方式 B。

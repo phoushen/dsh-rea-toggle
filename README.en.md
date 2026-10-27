@@ -93,7 +93,7 @@ You need REA already working in DSH. This plugin does not install REA.
 ### Option A — from GitHub
 
 ```powershell
-dsh plugin --profile "$env:DSH_PROFILE" add github:YOUR-GITHUB/dsh-rea-toggle
+dsh plugin --profile "$env:DSH_PROFILE" add github:phoushen/dsh-rea-toggle
 ```
 
 If your build has no `dsh` on PATH, use Option B.

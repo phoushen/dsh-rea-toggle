@@ -27,7 +27,7 @@ then the `.dsh` beside your harness install.
 ## Path A — `dsh plugin add`
 
 ```powershell
-dsh plugin --profile "$env:DSH_PROFILE" add github:YOUR-GITHUB/dsh-rea-toggle
+dsh plugin --profile "$env:DSH_PROFILE" add github:phoushen/dsh-rea-toggle
 ```
 
 Then fully quit and restart the harness (tray icon included — closing the window

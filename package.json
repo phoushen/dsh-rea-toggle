@@ -1,0 +1,60 @@
+{
+  "name": "dsh-rea-toggle",
+  "version": "1.0.0",
+  "private": false,
+  "type": "module",
+  "description": "A GUI switch for the REA MCP server in DeepSeek Harness: turn its ~229 mcp__rea__* tools on or off without editing YAML, so unrelated chats stop paying their context cost.",
+  "license": "MIT",
+  "author": "phoushen",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "mcp",
+    "rea",
+    "reverse-engineering",
+    "context-window",
+    "token-budget"
+  ],
+  "homepage": "https://github.com/phoushen/dsh-rea-toggle#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phoushen/dsh-rea-toggle.git"
+  },
+  "bugs": {
+    "url": "https://github.com/phoushen/dsh-rea-toggle/issues"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "docs",
+    "README.md",
+    "README.zh.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  }
+}

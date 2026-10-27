@@ -1,0 +1,12 @@
+{
+  "chip": {
+    "on": "REA 已开",
+    "off": "REA 已关",
+    "error": "REA ?"
+  },
+  "tip": {
+    "on": "REA MCP 已开启 —— 每次请求都会带上全部 mcp__rea__* 工具定义。点击关闭（下次启动生效）。",
+    "off": "REA MCP 已关闭 —— 当前不注册任何 mcp__rea__* 工具。点击开启（下次启动生效）。",
+    "error": "dsh-rea-toggle：{error}"
+  }
+}

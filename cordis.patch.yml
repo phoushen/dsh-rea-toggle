@@ -1,0 +1,11 @@
+# dsh-rea-toggle — the row that puts the switch in the Web GUI.
+#
+# This row only registers the plugin. The flag it flips lives on a DIFFERENT
+# row: the MCP client row that launches REA (default id: rea-mcp), wherever you
+# declared it. Set `targetId` if your REA row uses another id.
+- insert:
+    - id: dsh-rea-toggle
+      name: dsh-rea-toggle
+      config:
+        targetId: rea-mcp
+        routePrefix: /rea-toggle

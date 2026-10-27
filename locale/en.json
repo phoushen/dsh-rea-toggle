@@ -1,0 +1,12 @@
+{
+  "chip": {
+    "on": "REA ON",
+    "off": "REA OFF",
+    "error": "REA ?"
+  },
+  "tip": {
+    "on": "REA MCP is ON — every mcp__rea__* tool schema rides along on each request. Click to turn it off (takes effect on the next harness start).",
+    "off": "REA MCP is OFF — no mcp__rea__* tools are registered. Click to turn it on (takes effect on the next harness start).",
+    "error": "dsh-rea-toggle: {error}"
+  }
+}

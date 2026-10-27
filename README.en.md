@@ -13,6 +13,19 @@
 ● REA OFF    ← nothing registered, unrelated chats pay nothing
 ```
 
+<p align="center">
+  <img src="docs/preview-on.png" width="720" alt="REA ON">
+  <br>
+  <sub><b>REA ON</b> — all 229 <code>mcp__rea__*</code> tools are registered and ride along on every request</sub>
+</p>
+
+<p align="center">
+  <img src="docs/preview-off.png" width="720" alt="REA OFF">
+  <br>
+  <sub><b>REA OFF</b> — nothing is registered, unrelated chats pay nothing</sub>
+</p>
+
+
 ---
 
 ## The problem
@@ -189,6 +202,15 @@ The plugin writes to exactly one path — `<DSH_HOME>/profiles/<profile>/cordis.
 | `row "rea-mcp" not found` | your REA row has another id | set `config.targetId` |
 | Toggled OFF, tools still there | tool registration happens at boot | restart the harness |
 | Changing `disabled` does nothing | no `mcp-client` row launches REA on this profile | this switch is not the problem; check your REA install |
+
+## Video
+
+A walkthrough in Chinese covering installation, the switch in action, and troubleshooting:
+
+[![Bilibili demo](https://img.shields.io/badge/Bilibili-video%20walkthrough-00A1D6?logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1cqxu6FEh1)
+
+Direct link: <https://www.bilibili.com/video/BV1cqxu6FEh1?t=0.8>
+
 
 ## License
 

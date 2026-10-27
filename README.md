@@ -13,6 +13,19 @@
 ● REA 已关     ← 一个都不注册，无关对话零负担
 ```
 
+<p align="center">
+  <img src="docs/preview-on.png" width="720" alt="REA 已开">
+  <br>
+  <sub><b>REA 已开</b> —— 229 个 <code>mcp__rea__*</code> 工具已注册，每一轮请求都要带上</sub>
+</p>
+
+<p align="center">
+  <img src="docs/preview-off.png" width="720" alt="REA 已关">
+  <br>
+  <sub><b>REA 已关</b> —— 一个都不注册，无关对话不再付这笔开销</sub>
+</p>
+
+
 ---
 
 ## 问题
@@ -184,6 +197,15 @@ REA 那行不叫 `rea-mcp` 就设 `targetId`。多服务器：一个目标一行
 | `row "rea-mcp" not found` | 你的 REA 行 id 不同 | 设 `config.targetId` |
 | 关了之后工具还在 | 工具注册发生在启动时 | 重启宿主 |
 | 改 `disabled` 没反应 | 这个 profile 里没有拉起 REA 的 `mcp-client` 行 | 那不是开关的问题，先查 REA 安装 |
+
+## 视频
+
+这是一段用中文讲的演示，覆盖安装、开关效果和排错：
+
+[![B 站演示](https://img.shields.io/badge/Bilibili-%E8%A7%86%E9%A2%91%E6%BC%94%E7%A4%BA-00A1D6?logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1cqxu6FEh1)
+
+直链：<https://www.bilibili.com/video/BV1cqxu6FEh1?t=0.8>
+
 
 ## 许可
 
